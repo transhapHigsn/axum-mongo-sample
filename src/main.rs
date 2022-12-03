@@ -11,11 +11,18 @@ use axum::{
     Router,
 };
 use dotenv::dotenv;
-use mongodb::{Client, options::{Compressor, ClientOptions}};
-use tower_http::{trace::TraceLayer, set_header::SetResponseHeaderLayer};
+use mongodb::{
+    options::{ClientOptions, Compressor},
+    Client,
+};
+use tower_http::{set_header::SetResponseHeaderLayer, trace::TraceLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-use handlers::{root, create_user, handler_404, sample_users};
+use handlers::{
+    common::{handler_404, root},
+    mflix::sample_users,
+    sample::create_user,
+};
 
 //#[derive(Debug)]
 //pub enum MongoError {
@@ -40,7 +47,8 @@ async fn main() {
     // initialize tracing
     dotenv().ok();
 
-    let mongo_uri: String = std::env::var("MONGO_URI").expect("Failed to load `MONGO_MAX_POOL_SIZE` environment variable.");
+    let mongo_uri: String = std::env::var("MONGO_URI")
+        .expect("Failed to load `MONGO_MAX_POOL_SIZE` environment variable.");
     let mongo_connection_timeout: u64 = std::env::var("MONGO_CONNECTION_TIMEOUT")
         .expect("Failed to load `MONGO_CONNECTION_TIMEOUT` environment variable.")
         .parse()
@@ -56,8 +64,9 @@ async fn main() {
 
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::new(
-            std::env::var("RUST_LOG")
-            .unwrap_or_else(|_| "rust_axum=debug,axum=debug,tower_http=debug,mongodb=debug".into()),
+            std::env::var("RUST_LOG").unwrap_or_else(|_| {
+                "rust_axum=debug,axum=debug,tower_http=debug,mongodb=debug".into()
+            }),
         ))
         .with(tracing_subscriber::fmt::layer())
         .init();

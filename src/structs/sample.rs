@@ -1,4 +1,3 @@
-use bson::oid::ObjectId;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
@@ -11,13 +10,4 @@ pub struct CreateUser {
 pub struct User {
     pub id: u64,
     pub username: String,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-
-pub struct SampleUser {
-    pub _id: ObjectId,
-    pub name: String,
-    pub email: String,
-    password: String
 }
