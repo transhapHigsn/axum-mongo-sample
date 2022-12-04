@@ -1,11 +1,19 @@
+use bson;
+//use bson::oid::ObjectId;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+//#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+//pub enum ListingId {
+//    ObjectId,
+//    String
+//}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Root {
+pub struct ListingAndReview {
     #[serde(rename = "_id")]
-    pub id: Id,
+    pub id: String,
     #[serde(rename = "listing_url")]
     pub listing_url: String,
     pub name: String,
@@ -33,21 +41,21 @@ pub struct Root {
     #[serde(rename = "cancellation_policy")]
     pub cancellation_policy: String,
     #[serde(rename = "last_scraped")]
-    pub last_scraped: LastScraped,
+    pub last_scraped: bson::DateTime,
     #[serde(rename = "calendar_last_scraped")]
-    pub calendar_last_scraped: CalendarLastScraped,
-    pub accommodates: Accommodates,
-    pub bedrooms: Bedrooms,
-    pub beds: Beds,
+    pub calendar_last_scraped: bson::DateTime,
+    pub accommodates: i32,
+    pub bedrooms: Option<i32>,
+    pub beds: i32,
     #[serde(rename = "number_of_reviews")]
-    pub number_of_reviews: NumberOfReviews,
-    pub bathrooms: Bathrooms,
+    pub number_of_reviews: i32,
+    pub bathrooms: bson::Decimal128,
     pub amenities: Vec<String>,
-    pub price: Price,
+    pub price: bson::Decimal128,
     #[serde(rename = "extra_people")]
-    pub extra_people: ExtraPeople,
+    pub extra_people: bson::Decimal128,
     #[serde(rename = "guests_included")]
-    pub guests_included: GuestsIncluded,
+    pub guests_included: bson::Decimal128,
     pub images: Images,
     pub host: Host,
     pub address: Address,
@@ -55,97 +63,6 @@ pub struct Root {
     #[serde(rename = "review_scores")]
     pub review_scores: ReviewScores,
     pub reviews: Vec<Value>,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Id {
-    #[serde(rename = "$oid")]
-    pub oid: String,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct LastScraped {
-    #[serde(rename = "$date")]
-    pub date: Date,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Date {
-    #[serde(rename = "$numberLong")]
-    pub number_long: String,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CalendarLastScraped {
-    #[serde(rename = "$date")]
-    pub date: Date2,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Date2 {
-    #[serde(rename = "$numberLong")]
-    pub number_long: String,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Accommodates {
-    #[serde(rename = "$numberInt")]
-    pub number_int: String,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Bedrooms {
-    #[serde(rename = "$numberInt")]
-    pub number_int: String,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Beds {
-    #[serde(rename = "$numberInt")]
-    pub number_int: String,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct NumberOfReviews {
-    #[serde(rename = "$numberInt")]
-    pub number_int: String,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Bathrooms {
-    #[serde(rename = "$numberDecimal")]
-    pub number_decimal: String,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Price {
-    #[serde(rename = "$numberDecimal")]
-    pub number_decimal: String,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ExtraPeople {
-    #[serde(rename = "$numberDecimal")]
-    pub number_decimal: String,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GuestsIncluded {
-    #[serde(rename = "$numberDecimal")]
-    pub number_decimal: String,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -187,25 +104,11 @@ pub struct Host {
     #[serde(rename = "host_identity_verified")]
     pub host_identity_verified: bool,
     #[serde(rename = "host_listings_count")]
-    pub host_listings_count: HostListingsCount,
+    pub host_listings_count: i32,
     #[serde(rename = "host_total_listings_count")]
-    pub host_total_listings_count: HostTotalListingsCount,
+    pub host_total_listings_count: i32,
     #[serde(rename = "host_verifications")]
     pub host_verifications: Vec<String>,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct HostListingsCount {
-    #[serde(rename = "$numberInt")]
-    pub number_int: String,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct HostTotalListingsCount {
-    #[serde(rename = "$numberInt")]
-    pub number_int: String,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -227,57 +130,22 @@ pub struct Address {
 pub struct Location {
     #[serde(rename = "type")]
     pub type_field: String,
-    pub coordinates: Vec<Coordinate>,
+    pub coordinates: Vec<f64>,
     #[serde(rename = "is_location_exact")]
     pub is_location_exact: bool,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Coordinate {
-    #[serde(rename = "$numberDouble")]
-    pub number_double: String,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct Availability {
     #[serde(rename = "availability_30")]
-    pub availability_30: Availability30,
+    pub availability_30: i32,
     #[serde(rename = "availability_60")]
-    pub availability_60: Availability60,
+    pub availability_60: i32,
     #[serde(rename = "availability_90")]
-    pub availability_90: Availability90,
+    pub availability_90: i32,
     #[serde(rename = "availability_365")]
-    pub availability_365: Availability365,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Availability30 {
-    #[serde(rename = "$numberInt")]
-    pub number_int: String,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Availability60 {
-    #[serde(rename = "$numberInt")]
-    pub number_int: String,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Availability90 {
-    #[serde(rename = "$numberInt")]
-    pub number_int: String,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Availability365 {
-    #[serde(rename = "$numberInt")]
-    pub number_int: String,
+    pub availability_365: i32,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]

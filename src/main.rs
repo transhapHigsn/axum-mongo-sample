@@ -19,6 +19,7 @@ use tower_http::{set_header::SetResponseHeaderLayer, trace::TraceLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use handlers::{
+    airbnb::listings_and_reviews,
     common::{handler_404, root},
     mflix::sample_users,
     sample::create_user,
@@ -96,6 +97,7 @@ async fn main() {
         // `POST /users` goes to `create_user`
         .route("/users", post(create_user))
         .route("/sample_users", get(sample_users))
+        .route("/listings_and_reviews", get(listings_and_reviews))
         .layer(TraceLayer::new_for_http())
         .layer(SetResponseHeaderLayer::if_not_present(
             header::SERVER,
