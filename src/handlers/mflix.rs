@@ -1,12 +1,23 @@
-use axum::{extract::{Query, State}, http::StatusCode, response::IntoResponse, Json};
+use axum::{
+    extract::{Path, Query, State},
+    http::StatusCode,
+    response::IntoResponse,
+    Json
+};
 
 use futures::stream::StreamExt;
-use mongodb::{bson::doc, options::FindOptions, Client, Collection};
+use mongodb::{
+    bson::doc,
+    bson::oid::ObjectId,
+    options::{FindOptions, FindOneOptions},
+    Client,
+    Collection
+};
 
 use crate::structs::mflix::{Pagination, Response, SampleUser};
 
 
-pub async fn sample_users(State(client): State<Client>, pagination: Query<Pagination>) -> impl IntoResponse {
+pub async fn list_users(State(client): State<Client>, pagination: Query<Pagination>) -> impl IntoResponse {
     if pagination.page < 1 {
         let response = Response {
             success: false,
@@ -80,4 +91,57 @@ pub async fn sample_users(State(client): State<Client>, pagination: Query<Pagina
     };
 
     (StatusCode::OK, Json(response))
+}
+
+pub async fn user_by_id(State(client): State<Client>, user_id: Path<String>) -> impl IntoResponse {
+    let id = ObjectId::parse_str(user_id.0);
+    if let Err(err) = id {
+        return (StatusCode::BAD_REQUEST, Json(Response {
+            success: false,
+            error_message: Some(format!("Invalid value provided for id, reason: {:#?}", err)),
+            data: None
+        }));
+    }
+    let users_coll: Collection<SampleUser> = client
+        .database("sample_mflix")
+        .collection::<SampleUser>("users");
+
+    let mut options = FindOneOptions::default();
+    options.projection = Some(doc! {
+        "name": 1,
+        "email": 1
+    });
+
+    let filter = Some(doc! {
+        "_id": id.unwrap()
+    });
+
+    let user = users_coll.find_one(filter, options).await;
+    match user {
+        Ok(value) => {
+            match value {
+                Some(user) => {
+                    return (StatusCode::FOUND, Json(Response {
+                        success: true,
+                        data: Some(vec![user]),
+                        error_message: None
+                    }));
+                },
+                None => {
+                    return (StatusCode::NOT_FOUND, Json(Response {
+                        success: false,
+                        error_message: Some("No user exists for given id.".into()),
+                        data: None
+                    }));
+                }
+            };
+        },
+        Err(err) => {
+            return (StatusCode::NOT_FOUND, Json(Response {
+                success: false,
+                error_message: Some(format!("Couldn't find any user due to {:#?}", err)),
+                data: None
+            }));
+        }
+    }
 }
