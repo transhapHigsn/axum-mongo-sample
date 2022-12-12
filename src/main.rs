@@ -21,7 +21,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use handlers::{
     airbnb::listings_and_reviews,
     common::{handler_404, root},
-    mflix::{list_users, user_by_id},
+    mflix::{list_users, user_by_email, user_by_id, user_by_name},
     sample::create_user,
 };
 
@@ -97,7 +97,9 @@ async fn main() {
         // `POST /users` goes to `create_user`
         .route("/sample/users/", post(create_user))
         .route("/mflix/users/", get(list_users))
-        .route("/mflix/user/:id/", get(user_by_id))
+        .route("/mflix/user/id/:id/", get(user_by_id))
+        .route("/mflix/user/name/:name/", get(user_by_name))
+        .route("/mflix/user/email/:email/", get(user_by_email))
         .route("/airbnb/listings_and_reviews/", get(listings_and_reviews))
         .layer(TraceLayer::new_for_http())
         .layer(SetResponseHeaderLayer::if_not_present(

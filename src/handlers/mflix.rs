@@ -7,11 +7,10 @@ use axum::{
 
 use futures::stream::StreamExt;
 use mongodb::{
-    bson::doc,
-    bson::oid::ObjectId,
-    options::{FindOptions, FindOneOptions},
+    bson::{doc, Document, oid::ObjectId},
     Client,
-    Collection
+    Collection,
+    options::{FindOptions, FindOneOptions},
 };
 
 use crate::structs::mflix::{Pagination, Response, SampleUser};
@@ -102,6 +101,29 @@ pub async fn user_by_id(State(client): State<Client>, user_id: Path<String>) -> 
             data: None
         }));
     }
+
+    fetch_user(client, doc! {
+        "_id": id.unwrap()
+    }).await
+}
+
+pub async fn user_by_name(State(client): State<Client>, name: Path<String>) -> impl IntoResponse {
+    let user_name = name.0;
+    fetch_user(client, doc! {
+        "name": &user_name
+    }).await
+}
+
+
+pub async fn user_by_email(State(client): State<Client>, email: Path<String>) -> impl IntoResponse {
+    let user_email = email.0;
+    fetch_user(client, doc! {
+        "email": &user_email
+    }).await
+}
+
+
+async fn fetch_user(client: Client, filter: Document) -> (StatusCode, Json<Response>) {
     let users_coll: Collection<SampleUser> = client
         .database("sample_mflix")
         .collection::<SampleUser>("users");
@@ -112,11 +134,7 @@ pub async fn user_by_id(State(client): State<Client>, user_id: Path<String>) -> 
         "email": 1
     });
 
-    let filter = Some(doc! {
-        "_id": id.unwrap()
-    });
-
-    let user = users_coll.find_one(filter, options).await;
+    let user = users_coll.find_one(filter.clone(), options).await;
     match user {
         Ok(value) => {
             match value {
@@ -130,7 +148,7 @@ pub async fn user_by_id(State(client): State<Client>, user_id: Path<String>) -> 
                 None => {
                     return (StatusCode::NOT_FOUND, Json(Response {
                         success: false,
-                        error_message: Some("No user exists for given id.".into()),
+                        error_message: Some(format!("No user exists for given filter {:#?}.", filter)),
                         data: None
                     }));
                 }
