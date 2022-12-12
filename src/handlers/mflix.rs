@@ -7,7 +7,7 @@ use axum::{
 
 use futures::stream::StreamExt;
 use mongodb::{
-    bson::{doc, Document, oid::ObjectId},
+    bson::{Bson, doc, Document, oid::ObjectId},
     Client,
     Collection,
     options::{FindOptions, FindOneOptions},
@@ -146,9 +146,17 @@ async fn fetch_user(client: Client, filter: Document) -> (StatusCode, Json<Respo
                     }));
                 },
                 None => {
+                    let mut message: String = "".to_owned();
+                    for (k, v) in filter {
+                        let message_part = match v {
+                            Bson::String(val) => format!("{}=={}, ", k, val),
+                            _ => format!("{}=={}, ", k, v)
+                        };
+                        message.push_str(&message_part);
+                    }
                     return (StatusCode::NOT_FOUND, Json(Response {
                         success: false,
-                        error_message: Some(format!("No user exists for given filter {:#?}.", filter)),
+                        error_message: Some(format!("No user exists for given filter: {}", message)),
                         data: None
                     }));
                 }
