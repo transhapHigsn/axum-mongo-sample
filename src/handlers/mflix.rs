@@ -26,6 +26,22 @@ pub async fn list_users(State(client): State<Client>, pagination: Query<Paginati
         return (StatusCode::BAD_REQUEST, Json(response));
     }
 
+    if pagination.per_page < 1 {
+        let response = Response {
+            success: false,
+            data: None,
+            error_message: Some("Rows per page must be greater than or equal to 1.".into())
+        };
+        return (StatusCode::BAD_REQUEST, Json(response));
+    } else if pagination.per_page > 100 {
+        let response = Response {
+            success: false,
+            data: None,
+            error_message: Some("Rows per page must be less than or equal to 100.".into())
+        };
+        return (StatusCode::BAD_REQUEST, Json(response));
+    }
+
     let sort_by: bson::Document;
     let mut order: i64 = 1;
     if let Some(val) = &pagination.sort_by {
@@ -163,11 +179,11 @@ async fn fetch_user(client: Client, filter: Document) -> (StatusCode, Json<Respo
             };
         },
         Err(err) => {
-            return (StatusCode::NOT_FOUND, Json(Response {
+            (StatusCode::NOT_FOUND, Json(Response {
                 success: false,
                 error_message: Some(format!("Couldn't find any user due to {:#?}", err)),
                 data: None
-            }));
+            }))
         }
     }
 }

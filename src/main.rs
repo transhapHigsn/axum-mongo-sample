@@ -15,7 +15,12 @@ use mongodb::{
     options::{ClientOptions, Compressor},
     Client,
 };
-use tower_http::{set_header::SetResponseHeaderLayer, trace::TraceLayer};
+use tower_http::{
+    limit::RequestBodyLimitLayer,
+    set_header::SetResponseHeaderLayer,
+    trace::TraceLayer,
+    timeout::TimeoutLayer
+};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use handlers::{
@@ -101,6 +106,10 @@ async fn main() {
         .route("/mflix/user/name/:name/", get(user_by_name))
         .route("/mflix/user/email/:email/", get(user_by_email))
         .route("/airbnb/listings_and_reviews/", get(listings_and_reviews))
+        // timeout requests after 10 secs, returning 408 status code
+        .layer(TimeoutLayer::new(Duration::from_secs(10)))
+        // don't allow request bodies larger than 1024 bytes, returning 413 status code
+        .layer(RequestBodyLimitLayer::new(1024))
         .layer(TraceLayer::new_for_http())
         .layer(SetResponseHeaderLayer::if_not_present(
             header::SERVER,
