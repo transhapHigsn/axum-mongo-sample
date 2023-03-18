@@ -12,7 +12,7 @@ use axum::{
 };
 use dotenv::dotenv;
 use mongodb::{
-    options::{ClientOptions, Compressor},
+    options::ClientOptions,
     Client,
 };
 use tower_http::{
@@ -29,6 +29,7 @@ use handlers::{
     mflix::{list_users, user_by_email, user_by_id, user_by_name},
     sample::create_user,
 };
+use structs::common::DatabaseConfig;
 
 //#[derive(Debug)]
 //pub enum MongoError {
@@ -53,21 +54,6 @@ async fn main() {
     // initialize tracing
     dotenv().ok();
 
-    let mongo_uri: String = std::env::var("MONGO_URI")
-        .expect("Failed to load `MONGO_MAX_POOL_SIZE` environment variable.");
-    let mongo_connection_timeout: u64 = std::env::var("MONGO_CONNECTION_TIMEOUT")
-        .expect("Failed to load `MONGO_CONNECTION_TIMEOUT` environment variable.")
-        .parse()
-        .expect("Failed to parse `MONGO_CONNECTION_TIMEOUT` environment variable.");
-    let mongo_min_pool_size: u32 = std::env::var("MONGO_MIN_POOL_SIZE")
-        .expect("Failed to load `MONGO_MIN_POOL_SIZE` environment variable.")
-        .parse()
-        .expect("Failed to parse `MONGO_MIN_POOL_SIZE` environment variable.");
-    let mongo_max_pool_size: u32 = std::env::var("MONGO_MAX_POOL_SIZE")
-        .expect("Failed to load `MONGO_MAX_POOL_SIZE` environment variable.")
-        .parse()
-        .expect("Failed to parse `MONGO_MAX_POOL_SIZE` environment variable.");
-
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::new(
             std::env::var("RUST_LOG").unwrap_or_else(|_| {
@@ -77,23 +63,14 @@ async fn main() {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    let mut client_options = ClientOptions::parse(mongo_uri).await.unwrap();
-    client_options.connect_timeout = Some(Duration::from_secs(mongo_connection_timeout));
-    client_options.max_pool_size = Some(mongo_max_pool_size);
-    client_options.min_pool_size = Some(mongo_min_pool_size);
-
+    let database_config = DatabaseConfig::new();
+    let mut client_options = ClientOptions::parse(database_config.uri).await.unwrap();
+    client_options.connect_timeout = database_config.connection_timeout;
+    client_options.max_pool_size = database_config.max_pool_size;
+    client_options.min_pool_size = database_config.min_pool_size;
     // the server will select the algorithm it supports from the list provided by the driver
-    client_options.compressors = Some(vec![
-        Compressor::Snappy,
-        Compressor::Zlib {
-            level: Default::default(),
-        },
-        Compressor::Zstd {
-            level: Default::default(),
-        },
-    ]);
+    client_options.compressors = database_config.compressors;
     let client = Client::with_options(client_options).unwrap();
-    let server_header_value = HeaderValue::from_static("rust-axum");
 
     // build our application with a route
     let app = Router::new()
@@ -113,12 +90,10 @@ async fn main() {
         .layer(TraceLayer::new_for_http())
         .layer(SetResponseHeaderLayer::if_not_present(
             header::SERVER,
-            server_header_value,
+            HeaderValue::from_static("rust-axum"),
         ));
     let app = app.fallback(handler_404).with_state(client);
 
-    // run our app with hyper
-    // `axum::Server` is a re-export of `hyper::Server`
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     tracing::debug!("listening on {}", addr);
     axum::Server::bind(&addr)

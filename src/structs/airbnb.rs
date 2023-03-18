@@ -65,7 +65,7 @@ pub struct ListingAndReview {
     pub reviews: Vec<Value>,
 }
 
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Images {
     #[serde(rename = "thumbnail_url")]
@@ -78,7 +78,7 @@ pub struct Images {
     pub xl_picture_url: String,
 }
 
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Host {
     #[serde(rename = "host_id")]
@@ -135,7 +135,7 @@ pub struct Location {
     pub is_location_exact: bool,
 }
 
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Availability {
     #[serde(rename = "availability_30")]
@@ -148,6 +148,6 @@ pub struct Availability {
     pub availability_365: i32,
 }
 
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReviewScores {}

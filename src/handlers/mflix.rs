@@ -94,7 +94,6 @@ pub async fn list_users(State(client): State<Client>, pagination: Query<Paginati
         .await
         .expect("could not load users data.");
     let mut users: Vec<SampleUser> = Vec::new();
-
     while let Some(doc) = users_cursor.next().await {
         users.push(doc.expect("could not load user info."));
     }
@@ -104,7 +103,6 @@ pub async fn list_users(State(client): State<Client>, pagination: Query<Paginati
         data: Some(users),
         error_message: None
     };
-
     (StatusCode::OK, Json(response))
 }
 
@@ -155,11 +153,11 @@ async fn fetch_user(client: Client, filter: Document) -> (StatusCode, Json<Respo
         Ok(value) => {
             match value {
                 Some(user) => {
-                    return (StatusCode::FOUND, Json(Response {
+                    (StatusCode::FOUND, Json(Response {
                         success: true,
                         data: Some(vec![user]),
                         error_message: None
-                    }));
+                    }))
                 },
                 None => {
                     let mut message: String = "".to_owned();
@@ -170,13 +168,13 @@ async fn fetch_user(client: Client, filter: Document) -> (StatusCode, Json<Respo
                         };
                         message.push_str(&message_part);
                     }
-                    return (StatusCode::NOT_FOUND, Json(Response {
+                    (StatusCode::NOT_FOUND, Json(Response {
                         success: false,
                         error_message: Some(format!("No user exists for given filter: {}", message)),
                         data: None
-                    }));
+                    }))
                 }
-            };
+            }
         },
         Err(err) => {
             (StatusCode::NOT_FOUND, Json(Response {
