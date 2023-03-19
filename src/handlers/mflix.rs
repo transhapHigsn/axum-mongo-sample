@@ -26,7 +26,6 @@ pub async fn list_users(State(client): State<Client>, pagination: Query<Paginati
     }
 
     let order: i64 = match pagination.order.as_str() {
-        "asc" => 1,
         "desc" => -1,
         _ => 1,
     };
