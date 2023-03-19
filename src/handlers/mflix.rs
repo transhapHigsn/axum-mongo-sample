@@ -4,7 +4,6 @@ use axum::{
     response::IntoResponse,
     Json
 };
-
 use futures::stream::StreamExt;
 use mongodb::{
     bson::{Bson, doc, Document, oid::ObjectId},
@@ -17,64 +16,25 @@ use crate::structs::mflix::{Pagination, Response, SampleUser};
 
 
 pub async fn list_users(State(client): State<Client>, pagination: Query<Pagination>) -> impl IntoResponse {
-    if pagination.page < 1 {
+    if let Err(message) = pagination.check() {
         let response = Response {
             success: false,
             data: None,
-            error_message: Some("Page must be greater than or equal to 1.".into())
+            error_message: Some(message)
         };
         return (StatusCode::BAD_REQUEST, Json(response));
     }
 
-    if pagination.per_page < 1 {
-        let response = Response {
-            success: false,
-            data: None,
-            error_message: Some("Rows per page must be greater than or equal to 1.".into())
-        };
-        return (StatusCode::BAD_REQUEST, Json(response));
-    } else if pagination.per_page > 100 {
-        let response = Response {
-            success: false,
-            data: None,
-            error_message: Some("Rows per page must be less than or equal to 100.".into())
-        };
-        return (StatusCode::BAD_REQUEST, Json(response));
-    }
-
-    let sort_by: bson::Document;
     let mut order: i64 = 1;
-    if let Some(val) = &pagination.sort_by {
-        if !(["_id", "name", "email"].contains(&val.as_str())) {
-            let response = Response {
-                success: false,
-                data: None,
-                error_message: Some("Invalid value passed for sort_by query parameter. Must be one of: _id, email or name.".into())
-            };
-            return (StatusCode::BAD_REQUEST, Json(response));
+    if let Some(ord) = &pagination.order{
+        if ord == "desc" {
+            order = -1;
         }
-
-        if let Some(ord) = &pagination.order {
-            if !(["asc", "desc"]).contains(&ord.as_str()) {
-                let response = Response {
-                    success: false,
-                    data: None,
-                    error_message: Some("Invalid value passed for order query parameter. Must be one of: asc or desc.".into())
-                };
-                return (StatusCode::BAD_REQUEST, Json(response));
-            }
-
-            if ord == "desc" {
-                order = -1;
-            }
-        };
-
+    };
+    let mut sort_by: bson::Document = doc! {"name": order};
+    if let Some(val) = &pagination.sort_by {
         sort_by = doc! {
             val: order
-        };
-    } else {
-        sort_by = doc! {
-            "name": order
         };
     };
 

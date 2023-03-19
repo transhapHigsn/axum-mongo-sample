@@ -28,3 +28,30 @@ pub struct Pagination {
     pub sort_by: Option<String>,
     pub order: Option<String>
 }
+
+impl Pagination {
+    pub fn check(&self) -> Result<(), String> {
+        if self.page < 1 {
+            return Err("Page must be greater than or equal to 1.".into());
+        }
+
+        if self.per_page < 1 {
+            return Err("Rows per page must be greater than or equal to 1.".into());
+        } else if self.per_page > 100 {
+            return Err("Rows per page must be less than or equal to 100.".into());
+        }
+
+        if let Some(val) = &self.sort_by {
+            if !(["_id", "name", "email"].contains(&val.as_str())) {
+                return Err("Invalid value passed for sort_by query parameter. Must be one of: _id, email or name.".into());
+            }
+
+            if let Some(ord) = &self.order {
+                if !(["asc", "desc"]).contains(&ord.as_str()) {
+                    return Err("Invalid value passed for order query parameter. Must be one of: asc or desc.".into());
+                }
+            };
+        }
+        Ok(())
+    }
+}
