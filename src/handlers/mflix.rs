@@ -25,18 +25,12 @@ pub async fn list_users(State(client): State<Client>, pagination: Query<Paginati
         return (StatusCode::BAD_REQUEST, Json(response));
     }
 
-    let mut order: i64 = 1;
-    if let Some(ord) = &pagination.order{
-        if ord == "desc" {
-            order = -1;
-        }
+    let order: i64 = match pagination.order.as_str() {
+        "asc" => 1,
+        "desc" => -1,
+        _ => 1,
     };
-    let mut sort_by: bson::Document = doc! {"name": order};
-    if let Some(val) = &pagination.sort_by {
-        sort_by = doc! {
-            val: order
-        };
-    };
+    let sort_by: bson::Document = doc! {&pagination.sort_by: order};
 
     let users_coll: Collection<SampleUser> = client
         .database("sample_mflix")

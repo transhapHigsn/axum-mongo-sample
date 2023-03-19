@@ -3,7 +3,6 @@ use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-
 pub struct SampleUser {
     pub _id: ObjectId,
     pub name: String,
@@ -23,10 +22,20 @@ pub struct Response {
 #[skip_serializing_none]
 #[derive(Deserialize)]
 pub struct Pagination {
-    pub page: usize,
-    pub per_page: usize,
-    pub sort_by: Option<String>,
-    pub order: Option<String>
+    pub page: i32,
+    pub per_page: i32,
+    #[serde(default = "default_sort_by")]
+    pub sort_by: String,
+    #[serde(default = "default_order")]
+    pub order: String
+}
+
+fn default_sort_by() -> String {
+    "name".to_string()
+}
+
+fn default_order() -> String {
+    "asc".to_string()
 }
 
 impl Pagination {
@@ -41,16 +50,12 @@ impl Pagination {
             return Err("Rows per page must be less than or equal to 100.".into());
         }
 
-        if let Some(val) = &self.sort_by {
-            if !(["_id", "name", "email"].contains(&val.as_str())) {
-                return Err("Invalid value passed for sort_by query parameter. Must be one of: _id, email or name.".into());
-            }
+        if !(["_id".to_string(), "name".to_string(), "email".to_string()].contains(&self.sort_by)) {
+            return Err("Invalid value passed for sort_by query parameter. Must be one of: _id, email or name.".into());
+        }
 
-            if let Some(ord) = &self.order {
-                if !(["asc", "desc"]).contains(&ord.as_str()) {
-                    return Err("Invalid value passed for order query parameter. Must be one of: asc or desc.".into());
-                }
-            };
+        if !(["asc".to_string(), "desc".to_string()]).contains(&self.order) {
+            return Err("Invalid value passed for order query parameter. Must be one of: asc or desc.".into());
         }
         Ok(())
     }
