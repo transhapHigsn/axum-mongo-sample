@@ -4,6 +4,17 @@ Sample Rust application to checkout how Axum webserver can work with Mongo DB.
 
 For sample Mongo DB, you can use [Mongo Atlas](https://www.mongodb.com/atlas/database).
 
+## Setup code
+
+- [Install Rust](https://rust-lang.org/tools/install/)
+- Run `cargo install`
+- If required, update `Cargo.toml` to update package dependencies.
+- Run `cargo run`
+
+## Loading sample database
+
+- [Loading sample database from Mongo Atlas UI](https://www.mongodb.com/docs/atlas/sample-data/#std-label-load-sample-data)
+
 ## References
 
 - [Axum Examples](https://github.com/tokio-rs/axum/tree/main/examples)

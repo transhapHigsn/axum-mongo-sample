@@ -15,7 +15,8 @@ pub async fn listings_and_reviews(State(client): State<Client>) -> impl IntoResp
         "name": 1
     });
     let mut cursor = coll
-        .find(None, options)
+        .find(doc! {})
+        .with_options(options)
         .await
         .expect("could not load listings data.");
     let mut rows: Vec<ListingAndReview> = Vec::new();

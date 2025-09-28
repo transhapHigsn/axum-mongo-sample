@@ -29,7 +29,7 @@ pub async fn list_users(State(client): State<Client>, pagination: Query<Paginati
         "desc" => -1,
         _ => 1,
     };
-    let sort_by: bson::Document = doc! {&pagination.sort_by: order};
+    let sort_by: Document = doc! {&pagination.sort_by: order};
 
     let users_coll: Collection<SampleUser> = client
         .database("sample_mflix")
@@ -43,7 +43,8 @@ pub async fn list_users(State(client): State<Client>, pagination: Query<Paginati
         "email": 1
     });
     let mut users_cursor = users_coll
-        .find(None, options)
+        .find(doc! {})
+        .with_options(options)
         .await
         .expect("could not load users data.");
     let mut users: Vec<SampleUser> = Vec::new();
@@ -101,7 +102,7 @@ async fn fetch_user(client: Client, filter: Document) -> (StatusCode, Json<Respo
         "email": 1
     });
 
-    let user = users_coll.find_one(filter.clone(), options).await;
+    let user = users_coll.find_one(filter.clone()).with_options(options).await;
     match user {
         Ok(value) => {
             match value {

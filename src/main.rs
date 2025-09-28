@@ -1,8 +1,6 @@
 mod handlers;
 mod structs;
 
-//use std::io;
-use std::net::SocketAddr;
 use std::time::Duration;
 
 use axum::{
@@ -31,23 +29,6 @@ use handlers::{
 };
 use structs::common::DatabaseConfig;
 
-//#[derive(Debug)]
-//pub enum MongoError {
-//    Io(io::Error),
-//    Mongo(mongodb::error::Error),
-//}
-//
-//impl From<io::Error> for MongoError {
-//    fn from(err: io::Error) -> Self {
-//        MongoError::Io(err)
-//    }
-//}
-//
-//impl From<mongodb::error::Error> for MongoError {
-//    fn from(err: mongodb::error::Error) -> Self {
-//        MongoError::Mongo(err)
-//    }
-//}
 
 #[tokio::main]
 async fn main() {
@@ -57,7 +38,7 @@ async fn main() {
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::new(
             std::env::var("RUST_LOG").unwrap_or_else(|_| {
-                "rust_axum=debug,axum=debug,tower_http=debug,mongodb=debug".into()
+                "rust_axum=debug,axum=debug,tower_http=debug,mongodb=debug,axum::rejection=trace".into()
             }),
         ))
         .with(tracing_subscriber::fmt::layer())
@@ -79,9 +60,9 @@ async fn main() {
         // `POST /users` goes to `create_user`
         .route("/sample/users/", post(create_user))
         .route("/mflix/users/", get(list_users))
-        .route("/mflix/user/id/:id/", get(user_by_id))
-        .route("/mflix/user/name/:name/", get(user_by_name))
-        .route("/mflix/user/email/:email/", get(user_by_email))
+        .route("/mflix/user/id/{id}/", get(user_by_id))
+        .route("/mflix/user/name/{name}/", get(user_by_name))
+        .route("/mflix/user/email/{email}/", get(user_by_email))
         .route("/airbnb/listings_and_reviews/", get(listings_and_reviews))
         // timeout requests after 10 secs, returning 408 status code
         .layer(TimeoutLayer::new(Duration::from_secs(10)))
@@ -93,11 +74,7 @@ async fn main() {
             HeaderValue::from_static("rust-axum"),
         ));
     let app = app.fallback(handler_404).with_state(client);
-
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
-    tracing::debug!("listening on {}", addr);
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
-        .await
-        .unwrap();
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    tracing::debug!("listening on {}", listener.local_addr().unwrap());
+    axum::serve(listener, app).await.unwrap();
 }
